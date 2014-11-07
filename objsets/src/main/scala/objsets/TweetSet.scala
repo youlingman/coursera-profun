@@ -56,11 +56,7 @@ abstract class TweetSet {
    * and be implemented in the subclasses?
    */
    def union(that: TweetSet): TweetSet = filterAcc((tweet: Tweet) => !that.contains(tweet), that)
-   
-   /**
-    * Juage if the tweetset if empty or not
-    */
-   def isEmpty: Boolean
+
 
   /**
    * Returns the tweet from this set which has the greatest retweet count.
@@ -117,8 +113,6 @@ class Empty extends TweetSet {
 
   def filterAcc(p: Tweet => Boolean, acc: TweetSet): TweetSet = acc
   
-  def isEmpty = true
-  
   def mostRetweeted: Tweet = throw new NoSuchElementException("empty set")
   
   def descendingByRetweet: TweetList = Nil
@@ -142,16 +136,16 @@ class NonEmpty(elem: Tweet, left: TweetSet, right: TweetSet) extends TweetSet {
     val tmp_acc = if(p(elem)) acc.incl(elem) else acc
     left.filterAcc( p, right.filterAcc( p, tmp_acc) )
   }
-
-  def isEmpty = false
   
   def mostRetweeted: Tweet = {
     def max(left: Tweet, right: Tweet) = if(left.retweets > right.retweets) left else right
     
-    if(left.isEmpty && right.isEmpty) elem
-    else if(left.isEmpty) max(elem, right.mostRetweeted)
-    else if(right.isEmpty) max(elem, left.mostRetweeted)
-    else max(elem, max(left.mostRetweeted, right.mostRetweeted))
+    (left, right) match {
+      case (left:Empty, right:Empty) => elem
+      case (left:Empty, right:NonEmpty) => max(elem, right.mostRetweeted)
+      case (left:NonEmpty, right:Empty) => max(elem, left.mostRetweeted)
+      case (left:NonEmpty, right:NonEmpty) => max(elem, max(left.mostRetweeted, right.mostRetweeted))
+    }
   }
   
   def descendingByRetweet: TweetList = new Cons(mostRetweeted, remove(mostRetweeted).descendingByRetweet)
