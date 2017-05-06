@@ -1,6 +1,8 @@
 package observatory
 
 import com.sksamuel.scrimage.{Image, Pixel}
+import scala.math._
+import observatory.Visualization._
 
 /**
   * 3rd milestone: interactive visualization
@@ -15,8 +17,8 @@ object Interaction {
     */
   def tileLocation(zoom: Int, x: Int, y: Int): Location = {
     val n = Math.pow(2, zoom)
-    val latRad = Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n)))
-    Location(x / n * 360 - 180, latRad * 180 / Math.PI)
+    val latRad = atan(sinh(Pi * (1 - 2 * y / n)))
+    Location(latRad.toDegrees, x / n * 360 - 180)
   }
 
   /**
@@ -30,13 +32,13 @@ object Interaction {
   def tile(temperatures: Iterable[(Location, Double)], colors: Iterable[(Double, Color)], zoom: Int, x: Int, y: Int): Image = {
     val width = 256
     val height = 256
-    val pixels = new Array[Pixel](width * height)
 
-    for (i <- 0 to width; j <- 0 to height) {
-      val color = Visualization.interpolateColor(colors, Visualization.predictTemperature(temperatures, tileLocation(zoom + 8, 256 * x + i, 256 * y + j)))
-      pixels(i + j * height) = Pixel(color.red, color.green, color.blue, 127)
-    }
-    Image(width, height, pixels)
+    val pixels = {
+      for (j <- 0 until height; i <- 0 until width)
+        yield interpolateColor(colors, predictTemperature(temperatures, tileLocation(zoom + 8, 256 * x + i, 256 * y + j)))
+    }.map(c => Pixel(c.red, c.green, c.blue, 127))
+
+    Image(width, height, pixels.toArray)
   }
 
   /**
