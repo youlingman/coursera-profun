@@ -70,7 +70,7 @@ object TimeUsage {
     * @param line Raw fields
     */
   def row(line: List[String]): Row =
-    Row.fromSeq(line)
+    Row.fromSeq(line.head :: line.tail.map(_.toDouble))
 
   /** @return The initial data frame columns partitioned in three groups: primary needs (sleeping, eating, etc.),
     *         work and other (leisure activities)
@@ -92,7 +92,7 @@ object TimeUsage {
     val leisurePrefix = List("t02", "t04", "t06", "t07", "t08", "t09", "t10", "t12", "t13", "t14", "t15", "t16", "t18")
     (columnNames.filter(c => primaryPrefix.exists(c.startsWith)).map(new Column(_)),
       columnNames.filter(c => workingPrefix.exists(c.startsWith)).map(new Column(_)),
-      columnNames.filter(c => leisurePrefix.exists(c.startsWith)).map(new Column(_)))
+      columnNames.filter(c => leisurePrefix.exists(c.startsWith) && !primaryPrefix.exists(c.startsWith) && !workingPrefix.exists(c.startsWith)).map(new Column(_)))
   }
 
   /** @return a projection of the initial DataFrame such that all columns containing hours spent on primary needs
